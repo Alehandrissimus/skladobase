@@ -20,6 +20,6 @@ public interface Resource {
 
     ResourceType getResourceType();
 
-    void setResourceType(ResourceType resourceType);
+    void setResourceType(int resourceType);
 
 }

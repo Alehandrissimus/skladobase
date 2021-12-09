@@ -13,6 +13,9 @@ public interface ResourceDAO {
     String URL_PROPERTY = "${spring.datasource.url}";
     String USERNAME_PROPERTY = "${spring.datasource.username}";
     String PASSWORD_PROPERTY = "${spring.datasource.password}";
+    String URLTEST_PROPERTY = "${spring.test-datasource.url}";
+    String USERNAMETEST_PROPERTY = "${spring.test-datasource.username}";
+    String PASSWORDTEST_PROPERTY = "${spring.test-datasource.password}";
 
     String ERROR_TEST_CONNECTION = "Error while setting test connection ";
     String TEST = "_TEST";
@@ -25,6 +28,7 @@ public interface ResourceDAO {
     String UPDATE_RESOURCE = "update resource set title=?, count=?, description=?, resource_type=? where id_resource=?";
     String SELECT_RESOURCE_BY_NODE = "select * from resource where id_resource = " +
             "    (select n.resource from node n where id_node = ?)";
+    String SELECT_LAST_BY_TITLE = "select * from resource where title = ? ORDER BY id_resource DESC LIMIT 1";
 
     void setTestConnection() throws DAOConfigException;
 
@@ -32,11 +36,13 @@ public interface ResourceDAO {
 
     Collection<Resource> getAllResources() throws DAOException;
 
-    long createResource(Resource res) throws DAOException;
+    void createResource(Resource res) throws DAOException;
 
     void deleteResource(Resource res) throws DAOException;
 
     void updateResource(Resource res) throws DAOException;
 
     Resource getResourceByNodeId(long id) throws DAOException;
+
+    Resource getLastResourceByTitle(String str) throws DAOException;
 }

@@ -76,7 +76,7 @@ public class ResourceDAOImpl implements ResourceDAO {
                         resultSet.getString(2),
                         resultSet.getFloat(3),
                         resultSet.getString(4),
-                        ResourceType.convertToRole(resultSet.getInt(5))
+                        resultSet.getInt(5)
                 );
                 resources.add(resource);
             }
@@ -105,7 +105,32 @@ public class ResourceDAOImpl implements ResourceDAO {
                     resultSet.getString(2),
                     resultSet.getFloat(3),
                     resultSet.getString(4),
-                    ResourceType.convertToRole(resultSet.getInt(5))
+                    resultSet.getInt(5)
+            );
+        } catch (SQLException | DAOException e) {
+            log.error("DAO_LOGIC_EXCEPTION" + e.getMessage());
+            throw new DAOException("DAO_LOGIC_EXCEPTION", e);
+        }
+    }
+
+    @Override
+    public Resource getLastResourceByTitle(String str) throws DAOException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(SELECT_LAST_BY_TITLE)) {
+            preparedStatement.setString(1, str);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (!resultSet.isBeforeFirst()) {
+                log.error(RESOURCE_HAS_NOT_BEEN_RECEIVED);
+                throw new DAOException(RESOURCE_HAS_NOT_BEEN_RECEIVED);
+            }
+
+            resultSet.next();
+            return new ResourceImpl(
+                    resultSet.getLong(1),
+                    resultSet.getString(2),
+                    resultSet.getFloat(3),
+                    resultSet.getString(4),
+                    resultSet.getInt(5)
             );
         } catch (SQLException | DAOException e) {
             log.error("DAO_LOGIC_EXCEPTION" + e.getMessage());
@@ -130,7 +155,7 @@ public class ResourceDAOImpl implements ResourceDAO {
                         resultSet.getString(2),
                         resultSet.getFloat(3),
                         resultSet.getString(4),
-                        ResourceType.convertToRole(resultSet.getInt(5))
+                        resultSet.getInt(5)
                 );
                 resources.add(resource);
             }
@@ -143,7 +168,7 @@ public class ResourceDAOImpl implements ResourceDAO {
     }
 
     @Override
-    public long createResource(Resource resource) throws DAOException {
+    public void createResource(Resource resource) throws DAOException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(CREATE_RESOURCE)) {
             preparedStatement.setString(1, resource.getTitle());
             preparedStatement.setFloat(2, resource.getCount());
@@ -151,9 +176,7 @@ public class ResourceDAOImpl implements ResourceDAO {
             preparedStatement.setInt(4, resource.getResourceType().ordinal());
             int idResource = preparedStatement.executeUpdate();
             if (idResource > 0) {
-                ResultSet resultSets = preparedStatement.getGeneratedKeys();
-                resultSets.next();
-                return resultSets.getLong(1);
+                return;
             }
             throw new DAOException("DAO_LOGIC_EXCEPTION");
         } catch (SQLException | DAOException e) {

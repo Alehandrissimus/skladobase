@@ -8,6 +8,8 @@ import java.util.Collection;
 
 public interface ResourceService {
 
+
+
     void setTestConnection() throws DAOConfigException;
 
     Collection<Resource> getResourceByTitle(String str) throws DAOException;
@@ -16,7 +18,7 @@ public interface ResourceService {
 
     void deleteResource(Resource res) throws DAOException;
 
-    long createResource(Resource res) throws DAOException;
+    void createResource(Resource res) throws DAOException;
 
     Collection<Resource> getAllResources() throws DAOException;
 

@@ -5,14 +5,15 @@ import com.tcpp.skladobase.exception.DAOConfigException;
 import com.tcpp.skladobase.exception.DAOException;
 import com.tcpp.skladobase.model.Node;
 import com.tcpp.skladobase.model.Resource;
+import com.tcpp.skladobase.model.impl.NodeImpl;
+import com.tcpp.skladobase.model.impl.ResourceImpl;
 import com.tcpp.skladobase.services.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigInteger;
 import java.util.Collection;
 
 @RestController
@@ -38,28 +39,40 @@ public class SearchController {
     @GetMapping("/nodes")
     public Collection<Node> getAllNodes() {
         try {
+            Collection<Node> nodes = searchService.getNodes();
+            if(nodes.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
             return searchService.getNodes();
         } catch (DAOException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
     }
 
-    @PostMapping("/createResource")
-    public void createResource(Resource res) {
+    @PostMapping("/createResource/{nodeId}")
+    public void createResource(@RequestBody ResourceImpl res, @PathVariable long nodeId) {
         try {
-            searchService.importResource(res);
+            searchService.importResource(res, nodeId);
         } catch (DAOException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
     }
 
     @GetMapping("/getResource")
-    public void getResourceByNode(Node node) {
+    public Resource getResourceByNode(@RequestBody NodeImpl node) {
         try {
-            searchService.searchForResourceByNodeId(node.getId());
+            return searchService.searchForResourceByNodeId(node.getId());
         } catch (DAOException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
     }
 
+    @GetMapping("/search")
+    public Collection<Node> searchResource() {
+        try {
+            return searchService.searchResource("Resource 1");
+        } catch (DAOException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
 }

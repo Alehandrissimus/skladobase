@@ -2,9 +2,9 @@ package com.tcpp.skladobase.model;
 
 public interface Node {
 
-    int getId();
+    long getId();
 
-    void setId(int id);
+    void setId(long id);
 
     String getPosition();
 

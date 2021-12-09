@@ -11,14 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Properties;
 
 import static com.tcpp.skladobase.exception.MessagesForException.NODE_HAS_NOT_BEEN_RECEIVED;
 
@@ -66,10 +64,11 @@ public class NodeDAOImpl implements NodeDAO {
             }
 
             while (resultSet.next()) {
-                Node node = new NodeImpl(
-                        resultSet.getString(1),
-                        resultSet.getString(2)
-                );
+                Node node = new NodeImpl.NodeBuilder()
+                        .setId(resultSet.getLong(1))
+                        .setPosition(resultSet.getString(2))
+                        .setDescription(resultSet.getString(3))
+                        .Build();
                 nodes.add(node);
             }
             return nodes;
@@ -92,8 +91,9 @@ public class NodeDAOImpl implements NodeDAO {
             }
             resultSet.next();
             return new NodeImpl(
-                    resultSet.getString(1),
-                    resultSet.getString(2)
+                    resultSet.getLong(1),
+                    resultSet.getString(2),
+                    resultSet.getString(3)
             );
         } catch (SQLException | DAOException e) {
             log.error("DAO_LOGIC_EXCEPTION" + e.getMessage());
@@ -123,16 +123,42 @@ public class NodeDAOImpl implements NodeDAO {
     }
 
     @Override
-    public long createNode(Node node) throws DAOException {
+    public Collection<Node> getNodesByResourceId(long id) throws DAOException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(SELECT_NODES_WITH_RESOURCE)) {
+            preparedStatement.setLong(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            Collection<Node> nodes = new ArrayList<>();
+
+            if (!resultSet.isBeforeFirst()) {
+                log.error(NODE_HAS_NOT_BEEN_RECEIVED);
+                throw new DAOException(NODE_HAS_NOT_BEEN_RECEIVED);
+            }
+
+            while (resultSet.next()) {
+                Node node = new NodeImpl.NodeBuilder()
+                        .setId(resultSet.getLong(1))
+                        .setPosition(resultSet.getString(2))
+                        .setDescription(resultSet.getString(3))
+                        .Build();
+                nodes.add(node);
+            }
+            return nodes;
+
+        } catch (SQLException | DAOException e) {
+            log.error("DAO_LOGIC_EXCEPTION" + e.getMessage());
+            throw new DAOException("DAO_LOGIC_EXCEPTION", e);
+        }
+    }
+
+    @Override
+    public void createNode(Node node) throws DAOException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(CREATE_NODE)) {
             preparedStatement.setString(1, node.getPosition());
             preparedStatement.setString(2, node.getDescription());
             preparedStatement.setLong(3, node.getResource().getId());
             int idNode = preparedStatement.executeUpdate();
             if (idNode > 0) {
-                ResultSet resultSets = preparedStatement.getGeneratedKeys();
-                resultSets.next();
-                return resultSets.getLong(1);
+                return;
             }
             throw new DAOException("DAO_LOGIC_EXCEPTION");
         } catch (SQLException | DAOException e) {
@@ -142,7 +168,7 @@ public class NodeDAOImpl implements NodeDAO {
     }
 
     @Override
-    public long createNodeNoDesc(Node node) throws DAOException {
+    public void createNodeNoDesc(Node node) throws DAOException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(CREATE_NODE_NO_DESC)) {
             preparedStatement.setString(1, node.getPosition());
             preparedStatement.setLong(2, node.getResource().getId());
@@ -150,7 +176,7 @@ public class NodeDAOImpl implements NodeDAO {
             if (idNode > 0) {
                 ResultSet resultSets = preparedStatement.getGeneratedKeys();
                 resultSets.next();
-                return resultSets.getLong(1);
+                return;
             }
             throw new DAOException("DAO_LOGIC_EXCEPTION");
         } catch (SQLException | DAOException e) {
@@ -166,6 +192,20 @@ public class NodeDAOImpl implements NodeDAO {
             preparedStatement.setString(2, node.getDescription());
             preparedStatement.setLong(3, node.getResource().getId());
             preparedStatement.setLong(4, node.getId());
+            preparedStatement.executeUpdate();
+
+        } catch (SQLException e) {
+            log.error("DAO_LOGIC_EXCEPTION" + e.getMessage());
+            throw new DAOException("DAO_LOGIC_EXCEPTION", e);
+        }
+    }
+
+    @Override
+    public void updateNodeWithoutResource(Node node) throws DAOException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_NODE_NO_RES)) {
+            preparedStatement.setString(1, node.getPosition());
+            preparedStatement.setString(2, node.getDescription());
+            preparedStatement.setLong(3, node.getId());
             preparedStatement.executeUpdate();
 
         } catch (SQLException e) {

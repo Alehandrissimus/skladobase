@@ -11,11 +11,12 @@ public interface SearchService {
 
     void setTestConnection() throws DAOConfigException;
 
-    Resource searchForResourceByNodeId(int id) throws DAOException;
+    Resource searchForResourceByNodeId(long id) throws DAOException;
 
-    void importResource(Resource resource) throws DAOException;
+    void importResource(Resource resource, long id) throws DAOException, IllegalArgumentException;
 
     Collection<Node> getNodes() throws DAOException;
 
+    Collection<Node> searchResource(String str) throws DAOException;
 
 }
